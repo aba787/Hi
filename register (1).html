@@ -1,0 +1,196 @@
+<!-- FILE: register.html -->
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>تسجيل حساب - مُمكّن</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #eaf4ec;
+    }
+    .wrapper {
+      width: 420px;
+      background: #fff;
+      color: #666;
+      border-radius: 10px;
+      padding: 30px 40px;
+    }
+    .wrapper h1 {
+      font-size: 28px;
+      text-align: center;
+      color: #1b5e20;
+    }
+    .input-box {
+      width: 100%;
+      height: 50px;
+      margin: 20px 0;
+      position: relative;
+    }
+    .input-box input {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      border: 2px solid #a5d6a7;
+      border-radius: 40px;
+      font-size: 16px;
+      color: #333;
+      padding: 20px 45px 20px 20px;
+    }
+    .input-box input::placeholder { color: #ccc; }
+    .btn {
+      width: 100%;
+      height: 45px;
+      background: #2e7d32;
+      border: none;
+      outline: none;
+      border-radius: 40px;
+      cursor: pointer;
+      font-size: 16px;
+      color: #fff;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+    .register-link {
+      font-size: 14.5px;
+      text-align: center;
+      margin: 20px 0 10px;
+    }
+    .register-link a {
+      color: #1b5e20;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .register-link a:hover { text-decoration: underline; }
+  </style>
+</head>
+  <body>
+
+    <div class="wrapper">
+      <form id="registerForm" novalidate>
+        <h1>إنشاء حساب جديد</h1>
+
+        <div class="input-box">
+          <input type="text" id="name" placeholder="الاسم الكامل" required />
+        </div>
+
+        <div class="input-box">
+          <input type="email" id="email" placeholder="البريد الإلكتروني" required />
+        </div>
+
+        <div class="input-box" style="position: relative;">
+          <input type="password" id="password" placeholder="كلمة المرور" required minlength="6" />
+          <span id="togglePassword" style="position:absolute; left: 15px; top: 50%; transform: translateY(-50%); cursor:pointer; font-size: 18px;">👁️</span>
+        </div>
+
+        <div class="input-box">
+          <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور" required />
+        </div>
+
+        <p class="error-message" id="passwordError" style="color: red; font-size: 14px; display: none;">
+          كلمة المرور يجب أن تكون 6 أحرف على الأقل
+        </p>
+
+        <p class="error-message" id="firebaseError" style="color: red; font-size: 14px; display: none;"></p>
+
+        <button type="submit" class="btn">تسجيل</button>
+
+        <div class="register-link">
+          <p>لديك حساب؟ <a href="login.html">تسجيل الدخول</a></p>
+        </div>
+      </form>
+    </div>
+
+    <!-- Firebase -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+      import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyAlMibtDbLAZLMhhJNho5Sih_qBfWxZyXI",
+        authDomain: "momaken-45ba9.firebaseapp.com",
+        projectId: "momaken-45ba9",
+        storageBucket: "momaken-45ba9.appspot.com",
+        messagingSenderId: "638133555280",
+        appId: "1:638133555280:web:c84bd87c15cabe55d30155"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      const form = document.getElementById('registerForm');
+      const nameInput = document.getElementById('name');
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const confirmPasswordInput = document.getElementById('confirmPassword');
+      const passwordError = document.getElementById('passwordError');
+      const firebaseError = document.getElementById('firebaseError');
+      const togglePassword = document.getElementById('togglePassword');
+
+      togglePassword.addEventListener("click", () => {
+        const isPassword = passwordInput.type === "password";
+        passwordInput.type = isPassword ? "text" : "password";
+        confirmPasswordInput.type = isPassword ? "text" : "password";
+        togglePassword.textContent = isPassword ? "🙈" : "👁️";
+      });
+
+      passwordInput.addEventListener("input", () => {
+        passwordError.style.display = passwordInput.value.length < 6 ? "block" : "none";
+      });
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        firebaseError.style.display = "none";
+
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+        const confirmPassword = confirmPasswordInput.value.trim();
+
+        if (!name || !email || !password || password.length < 6 || password !== confirmPassword) {
+          firebaseError.textContent = password !== confirmPassword 
+            ? "كلمة المرور وتأكيدها غير متطابقين."
+            : "يرجى تعبئة جميع الحقول بشكل صحيح.";
+          firebaseError.style.display = "block";
+          return;
+        }
+
+        try {
+          const userCred = await createUserWithEmailAndPassword(auth, email, password);
+
+          await setDoc(doc(db, "users", userCred.user.uid), {
+            name,
+            email,
+            createdAt: serverTimestamp()
+          });
+
+          window.location.href = "profile.html";
+        } catch (error) {
+          if (error.code === 'auth/email-already-in-use') {
+            try {
+              const userCred = await signInWithEmailAndPassword(auth, email, password);
+              window.location.href = "profile.html";
+            } catch (loginError) {
+              firebaseError.textContent = "الحساب موجود، لكن كلمة المرور غير صحيحة.";
+              firebaseError.style.display = "block";
+            }
+          } else if (error.code === 'auth/invalid-email') {
+            firebaseError.textContent = "البريد الإلكتروني غير صالح.";
+            firebaseError.style.display = "block";
+          } else {
+            firebaseError.textContent = "حدث خطأ: " + error.message;
+            firebaseError.style.display = "block";
+          }
+        }
+      });
+    </script>
+  </body>
