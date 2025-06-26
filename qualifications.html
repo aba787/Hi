@@ -179,28 +179,34 @@
     });
 
     form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+  e.preventDefault();
 
-      const title = form.title.value.trim();
-      const issuer = form.issuer.value.trim();
-      const date = form.date.value;
-      const cv = form.cv.files[0]?.name || "غير مرفق";
-      const education = form.education.value;
-      const age = form.age.value;
-      const volunteered = form.volunteered.value;
-      const region = form.region.value;
+  const title = form.title.value.trim();
+  const issuer = form.issuer.value.trim();
+  const date = form.date.value;
+  const cv = form.cv.files[0]?.name || "غير مرفق";
+  const education = form.education.value;
+  const age = form.age.value;
+  const volunteered = form.volunteered.value;
+  const region = form.region.value;
 
-      if (!title || !issuer || !date || !education || !age || !volunteered || !region) {
-        alert("املأ جميع الحقول المطلوبة");
-        return;
-      }
+  if (!title || !issuer || !date || !education || !age || !volunteered || !region) {
+    alert("املأ جميع الحقول المطلوبة");
+    return;
+  }
 
-      await addDoc(collection(doc(db, "users", currentUser.uid), "qualifications"), {
-        title, issuer, date, cv, education, age, volunteered, region
-      });
+  await addDoc(collection(doc(db, "users", currentUser.uid), "qualifications"), {
+    title, issuer, date, cv, education, age, volunteered, region
+  });
 
-      window.location.href = "opportunities.html";
-      
+  form.reset();
+  message.style.display = "block";
+
+  setTimeout(() => {
+    window.location.href = "opportunities.html";
+  }, 2000); // ينتقل بعد ثانيتين
+});
+    
       form.reset();
       message.style.display = "block";
       setTimeout(() => message.style.display = "none", 3000);
