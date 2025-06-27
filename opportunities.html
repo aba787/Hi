@@ -225,7 +225,7 @@
         list.innerHTML = "<p>❌ لا توجد فرص تطابق الفلاتر الحالية.</p>";
         return;
       }
-
+<button class="favorite-btn" data-id="${oppId}">❤️ أضف للمفضلة</button>
       list.innerHTML = "";
       filtered.forEach(docSnap => {
         const opp = docSnap.data();
