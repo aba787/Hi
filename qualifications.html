@@ -147,98 +147,73 @@
     <p id="success-message">✅ تم التوثيق بنجاح!</p>
     <div id="qualifications-list"></div>
   </div>
+<script>
+  const form = document.getElementById("qualification-form");
+  const message = document.getElementById("success-message");
+  const listContainer = document.getElementById("qualifications-list");
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  // تحميل المؤهلات من LocalStorage عند فتح الصفحة
+  window.onload = () => {
+    renderQualifications();
+  };
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAlMibtDbLAZLMhhJNho5Sih_qBfWxZyXI",
-      authDomain: "momaken-45ba9.firebaseapp.com",
-      projectId: "momaken-45ba9",
-      storageBucket: "momaken-45ba9.appspot.com",
-      messagingSenderId: "638133555280",
-      appId: "1:638133555280:web:c84bd87c15cabe55d30155"
-    };
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth();
-    const db = getFirestore();
+    const title = form.title.value.trim();
+    const issuer = form.issuer.value.trim();
+    const date = form.date.value;
+    const cv = form.cv.files[0]?.name || "غير مرفق";
+    const education = form.education.value;
+    const age = form.age.value;
+    const volunteered = form.volunteered.value;
+    const region = form.region.value;
 
-    let currentUser;
+    if (!title || !issuer || !date || !education || !age || !volunteered || !region) {
+      alert("املأ جميع الحقول المطلوبة");
+      return;
+    }
 
-    const form = document.getElementById("qualification-form");
-    const message = document.getElementById("success-message");
-    const listContainer = document.getElementById("qualifications-list");
+    const qualification = { title, issuer, date, cv, education, age, volunteered, region };
 
-    onAuthStateChanged(auth, user => {
-      if (!user) return window.location.href = "login.html";
-      currentUser = user;
-      renderQualifications();
-    });
+    // حفظ المؤهل في LocalStorage
+    const stored = JSON.parse(localStorage.getItem("qualifications_demo")) || [];
+    stored.push(qualification);
+    localStorage.setItem("qualifications_demo", JSON.stringify(stored));
 
-    form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+    form.reset();
+    message.style.display = "block";
 
-  const title = form.title.value.trim();
-  const issuer = form.issuer.value.trim();
-  const date = form.date.value;
-  const cv = form.cv.files[0]?.name || "غير مرفق";
-  const education = form.education.value;
-  const age = form.age.value;
-  const volunteered = form.volunteered.value;
-  const region = form.region.value;
-
-  if (!title || !issuer || !date || !education || !age || !volunteered || !region) {
-    alert("املأ جميع الحقول المطلوبة");
-    return;
-  }
-
-  await addDoc(collection(doc(db, "users", currentUser.uid), "qualifications"), {
-    title, issuer, date, cv, education, age, volunteered, region
+    setTimeout(() => {
+      window.location.href = "profile.html";
+    }, 2000);
   });
 
-  form.reset();
-  message.style.display = "block";
+  function renderQualifications() {
+    listContainer.innerHTML = "";
+    const stored = JSON.parse(localStorage.getItem("qualifications_demo")) || [];
 
-  setTimeout(() => {
-    window.location.href = "profile.html";
-  }, 2000); // ينتقل بعد ثانيتين
-});
-    
-      form.reset();
-      message.style.display = "block";
-      setTimeout(() => message.style.display = "none", 3000);
-      renderQualifications();
-    });
-
-    async function renderQualifications() {
-      listContainer.innerHTML = "";
-      const snapshot = await getDocs(collection(doc(db, "users", currentUser.uid), "qualifications"));
-
-      if (snapshot.empty) {
-        listContainer.innerHTML = "<p style='text-align:center;'>لا توجد مؤهلات موثقة بعد.</p>";
-        return;
-      }
-
-      snapshot.forEach(docSnap => {
-        const q = docSnap.data();
-        const div = document.createElement("div");
-        div.className = "qualification-card";
-        div.innerHTML = `
-          <p>العنوان: ${q.title}</p>
-          <p>الجهة: ${q.issuer}</p>
-          <p>تاريخ الإصدار: ${q.date}</p>
-          <p>المرحلة التعليمية: ${q.education}</p>
-          <p>العمر: ${q.age}</p>
-          <p>سبق له التطوع؟ ${q.volunteered}</p>
-          <p>المنطقة: ${q.region}</p>
-          <p>السيرة الذاتية: ${q.cv}</p>
-        `;
-        listContainer.appendChild(div);
-      });
+    if (stored.length === 0) {
+      listContainer.innerHTML = "<p style='text-align:center;'>لا توجد مؤهلات موثقة بعد.</p>";
+      return;
     }
-  </script>
+
+    stored.forEach((q) => {
+      const div = document.createElement("div");
+      div.className = "qualification-card";
+      div.innerHTML = `
+        <p>العنوان: ${q.title}</p>
+        <p>الجهة: ${q.issuer}</p>
+        <p>تاريخ الإصدار: ${q.date}</p>
+        <p>المرحلة التعليمية: ${q.education}</p>
+        <p>العمر: ${q.age}</p>
+        <p>سبق له التطوع؟ ${q.volunteered}</p>
+        <p>المنطقة: ${q.region}</p>
+        <p>السيرة الذاتية: ${q.cv}</p>
+      `;
+      listContainer.appendChild(div);
+    });
+  }
+</script>
 </body>
 </html>
