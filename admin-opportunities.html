@@ -56,100 +56,112 @@
     }
   </style>
 </head>
-<body>
+  <body>
 
-  <h1>إضافة فرصة تطوعية</h1>
+    <h1>إضافة فرصة تطوعية</h1>
 
-  <form id="opportunity-form">
-    <label>عنوان الفرصة:</label>
-    <input type="text" name="title" required />
+    <form id="opportunity-form">
+      <label>عنوان الفرصة:</label>
+      <input type="text" name="title" required />
 
-    <label>التاريخ:</label>
-    <input type="date" name="date" required />
+      <label>التاريخ:</label>
+      <input type="date" name="date" required />
 
-    <label>الفئة:</label>
-    <select name="category" required>
-      <option value="">اختر</option>
-      <option value="ذكور">ذكور</option>
-      <option value="إناث">إناث</option>
-      <option value="الكل">الكل</option>
-    </select>
+      <label>الفئة:</label>
+      <select name="category" required>
+        <option value="">اختر</option>
+        <option value="ذكور">ذكور</option>
+        <option value="إناث">إناث</option>
+        <option value="الكل">الكل</option>
+      </select>
 
-    <label>المنطقة:</label>
-    <select name="region" required>
-      <option value="">اختر المنطقة</option>
-      <option value="الرياض">الرياض</option>
-      <option value="جدة">جدة</option>
-      <option value="الشرقية">الشرقية</option>
-      <option value="مكة">مكة</option>
-      <option value="المدينة">المدينة</option>
-      <option value="عسير">عسير</option>
-      <option value="القصيم">القصيم</option>
-    </select>
+      <label>المنطقة:</label>
+      <select name="region" required>
+        <option value="">اختر المنطقة</option>
+        <option value="الرياض">الرياض</option>
+        <option value="جدة">جدة</option>
+        <option value="الشرقية">الشرقية</option>
+        <option value="مكة">مكة</option>
+        <option value="المدينة">المدينة</option>
+        <option value="عسير">عسير</option>
+        <option value="القصيم">القصيم</option>
+      </select>
 
-    <label>وصف الفرصة:</label>
-    <textarea name="description" rows="4" required></textarea>
+      <label>وصف الفرصة:</label>
+      <textarea name="description" rows="4" required></textarea>
 
-    <button type="submit">نشر الفرصة</button>
-    <p id="success-message" style="display: none;">✅ تم نشر الفرصة بنجاح!</p>
-  </form>
+      <button type="submit">نشر الفرصة</button>
+      <p id="success-message" style="display: none;">✅ تم نشر الفرصة بنجاح!</p>
+    </form>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+      import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAlMibtDbLAZLMhhJNho5Sih_qBfWxZyXI",
-      authDomain: "momaken-45ba9.firebaseapp.com",
-      projectId: "momaken-45ba9",
-      storageBucket: "momaken-45ba9.appspot.com",
-      messagingSenderId: "638133555280",
-      appId: "1:638133555280:web:c84bd87c15cabe55d30155"
-    };
+      const firebaseConfig = {
+        apiKey: "AIzaSyAlMibtDbLAZLMhhJNho5Sih_qBfWxZyXI",
+        authDomain: "momaken-45ba9.firebaseapp.com",
+        projectId: "momaken-45ba9",
+        storageBucket: "momaken-45ba9.appspot.com",
+        messagingSenderId: "638133555280",
+        appId: "1:638133555280:web:c84bd87c15cabe55d30155"
+      };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
 
-    const form = document.getElementById("opportunity-form");
-    const successMsg = document.getElementById("success-message");
+      const form = document.getElementById("opportunity-form");
+      const successMsg = document.getElementById("success-message");
+      let currentUser = null;
 
-    let currentUser;
-
-    onAuthStateChanged(auth, user => {
-      if (!user) return window.location.href = "login-association.html";
-      currentUser = user;
-    });
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const title = form.title.value.trim();
-      const date = form.date.value;
-      const category = form.category.value;
-      const region = form.region.value;
-      const description = form.description.value.trim();
-
-      if (!title || !date || !category || !region || !description) {
-        alert("يرجى تعبئة جميع الحقول.");
-        return;
-      }
-
-      await addDoc(collection(db, "opportunities"), {
-        title,
-        date,
-        category,
-        region,
-        description,
-        createdAt: serverTimestamp(),
-        associationId: currentUser.uid
+      onAuthStateChanged(auth, user => {
+        if (!user) return window.location.href = "login-association.html";
+        currentUser = user;
       });
 
-      form.reset();
-      successMsg.style.display = "block";
-      setTimeout(() => successMsg.style.display = "none", 3000);
-    });
-  </script>
-</body>
-</html>
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!currentUser) return;
+
+        const title = form.title.value.trim();
+        const date = form.date.value;
+        const category = form.category.value;
+        const region = form.region.value;
+        const description = form.description.value.trim();
+
+        if (!title || !date || !category || !region || !description) {
+          alert("يرجى تعبئة جميع الحقول.");
+          return;
+        }
+
+        try {
+          // حفظ الفرصة
+          await addDoc(collection(db, "opportunities"), {
+            title,
+            date,
+            category,
+            region,
+            description,
+            createdAt: serverTimestamp(),
+            associationId: currentUser.uid
+          });
+
+          // حفظ الإشعار داخل الجمعية
+          await addDoc(collection(db, `associations/${currentUser.uid}/notifications`), {
+            title: "فرصة جديدة نُشرت",
+            body: `تم نشر فرصة تطوعية بعنوان: ${title}`,
+            timestamp: serverTimestamp()
+          });
+
+          form.reset();
+          successMsg.style.display = "block";
+          setTimeout(() => successMsg.style.display = "none", 3000);
+        } catch (err) {
+          alert("حدث خطأ أثناء النشر: " + err.message);
+        }
+      });
+    </script>
+  </body>
+  </html>
