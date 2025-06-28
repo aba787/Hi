@@ -110,71 +110,106 @@
     </div>
 
     <!-- Firebase تسجيل الدخول -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-      import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-      const firebaseConfig = {
-        apiKey: "AIzaSyAlMibtDbLAZLMhhJNho5Sih_qBfWxZyXI",
-        authDomain: "momaken-45ba9.firebaseapp.com",
-        projectId: "momaken-45ba9",
-        storageBucket: "momaken-45ba9.appspot.com",
-        messagingSenderId: "638133555280",
-        appId: "1:638133555280:web:c84bd87c15cabe55d30155"
-      };
+  const firebaseConfig = {
+    apiKey: "AIzaSyAlMibtDbLAZLMhhJNho5Sih_qBfWxZyXI",
+    authDomain: "momaken-45ba9.firebaseapp.com",
+    projectId: "momaken-45ba9",
+    storageBucket: "momaken-45ba9.appspot.com",
+    messagingSenderId: "638133555280",
+    appId: "1:638133555280:web:c84bd87c15cabe55d30155"
+  };
 
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-      const passwordInput = document.getElementById("password");
-      const togglePassword = document.getElementById("togglePassword");
-      const loginError = document.getElementById("loginError");
+  const form = document.getElementById('registerForm');
+  const nameInput = document.getElementById('name');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const confirmPasswordInput = document.getElementById('confirmPassword');
+  const passwordError = document.getElementById('passwordError');
+  const firebaseError = document.getElementById('firebaseError');
+  const togglePassword = document.getElementById('togglePassword');
 
-      // 👁️ إظهار / إخفاء كلمة المرور
-      togglePassword.addEventListener("click", () => {
-        const type = passwordInput.type === "password" ? "text" : "password";
-        passwordInput.type = type;
-        togglePassword.textContent = type === "text" ? "🙈" : "👁️";
+  const adminEmail = "admin@email.com"; // ✳️ إيميل الأدمن
+
+  togglePassword.addEventListener("click", () => {
+    const isPassword = passwordInput.type === "password";
+    passwordInput.type = isPassword ? "text" : "password";
+    confirmPasswordInput.type = isPassword ? "text" : "password";
+    togglePassword.textContent = isPassword ? "🙈" : "👁️";
+  });
+
+  passwordInput.addEventListener("input", () => {
+    passwordError.style.display = passwordInput.value.length < 6 ? "block" : "none";
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    firebaseError.style.display = "none";
+
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+    const confirmPassword = confirmPasswordInput.value.trim();
+
+    if (!name || !email || !password || password.length < 6 || password !== confirmPassword) {
+      firebaseError.textContent = password !== confirmPassword 
+        ? "كلمة المرور وتأكيدها غير متطابقين."
+        : "يرجى تعبئة جميع الحقول بشكل صحيح.";
+      firebaseError.style.display = "block";
+      return;
+    }
+
+    try {
+      // تسجيل المستخدم
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+
+      // إضافة بياناته في Firestore
+      await setDoc(doc(db, "users", userCred.user.uid), {
+        name,
+        email,
+        createdAt: serverTimestamp()
       });
 
-      // 🔐 تسجيل الدخول
-      document.getElementById("login-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
+      // تحويل حسب نوع الحساب
+      if (email === adminEmail) {
+        window.location.href = "admin-chat.html";
+      } else {
+        window.location.href = "profile.html";
+      }
 
-        const email = document.getElementById("email").value.trim();
-        const password = passwordInput.value.trim();
-        loginError.style.display = "none";
-
-        if (!email || !password) {
-          loginError.textContent = "يرجى تعبئة البريد الإلكتروني وكلمة المرور.";
-          loginError.style.display = "block";
-          return;
-        }
-
+    } catch (error) {
+      if (error.code === 'auth/email-already-in-use') {
         try {
-          await signInWithEmailAndPassword(auth, email, password);
-          window.location.href = "profile.html";
-        } catch (err) {
-          switch (err.code) {
-            case 'auth/user-not-found':
-              loginError.textContent = "لا يوجد حساب بهذا البريد.";
-              break;
-            case 'auth/wrong-password':
-              loginError.textContent = "كلمة المرور غير صحيحة.";
-              break;
-            case 'auth/invalid-email':
-              loginError.textContent = "البريد الإلكتروني غير صالح.";
-              break;
-            case 'auth/too-many-requests':
-              loginError.textContent = "تم حظر هذا الحساب مؤقتًا بسبب عدة محاولات فاشلة.";
-              break;
-            default:
-              loginError.textContent = "حدث خطأ: " + err.message;
-          }
-          loginError.style.display = "block";
-        }
-      });
-    </script>
+          // تسجيل دخول لو كان الحساب موجود
+          const userCred = await signInWithEmailAndPassword(auth, email, password);
 
+          if (email === adminEmail) {
+            window.location.href = "admin-chat.html";
+          } else {
+            window.location.href = "qualifications.html";
+          }
+
+        } catch (loginError) {
+          firebaseError.textContent = "الحساب موجود، لكن كلمة المرور غير صحيحة.";
+          firebaseError.style.display = "block";
+        }
+      } else if (error.code === 'auth/invalid-email') {
+        firebaseError.textContent = "البريد الإلكتروني غير صالح.";
+        firebaseError.style.display = "block";
+      } else {
+        firebaseError.textContent = "حدث خطأ: " + error.message;
+        firebaseError.style.display = "block";
+      }
+    }
+  });
+</script>
   </body>
   </html>
