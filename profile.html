@@ -77,7 +77,7 @@
     }
   </style>
 </head>
-  <body>
+<body>
   <div class="wrapper">
     <h1>الملف الشخصي</h1>
     <img id="profileImg" class="profile-image" src="https://via.placeholder.com/120" alt="الصورة الشخصية" />
@@ -85,10 +85,10 @@
 
     <form id="profile-form">
       <label for="name">الاسم الكامل:</label>
-      <input type="text" id="name" required />
+      <input type="text" id="name" />
 
       <label for="gender">الجنس:</label>
-      <select id="gender" required>
+      <select id="gender">
         <option value="">-- اختر --</option>
         <option value="ذكر">ذكر</option>
         <option value="أنثى">أنثى</option>
@@ -111,67 +111,25 @@
   </div>
 
   <script>
-    let selectedImageFile = null;
-
     const profileImg = document.getElementById("profileImg");
     const imageUpload = document.getElementById("imageUpload");
-    const saveBtn = document.getElementById("saveBtn");
-
-    // ✅ تحميل البيانات المحفوظة مؤقتًا
-    window.onload = () => {
-      const saved = JSON.parse(localStorage.getItem("demo_profile"));
-      if (saved) {
-        document.getElementById("name").value = saved.name || "";
-        document.getElementById("gender").value = saved.gender || "";
-        document.getElementById("bio").value = saved.bio || "";
-        profileImg.src = saved.imagePreviewUrl || "https://via.placeholder.com/120";
-
-        (saved.interests || []).forEach(val => {
-          const cb = document.querySelector(`input[value="${val}"]`);
-          if (cb) cb.checked = true;
-        });
-      }
-    };
 
     imageUpload.addEventListener("change", (e) => {
-      selectedImageFile = e.target.files[0];
-      if (selectedImageFile) {
+      const file = e.target.files[0];
+      if (file) {
         const reader = new FileReader();
         reader.onload = () => {
           profileImg.src = reader.result;
         };
-        reader.readAsDataURL(selectedImageFile);
+        reader.readAsDataURL(file);
       }
     });
 
-    document.getElementById("profile-form").addEventListener("submit", async (e) => {
+    document.getElementById("profile-form").addEventListener("submit", (e) => {
       e.preventDefault();
 
-      const name = document.getElementById("name").value.trim();
-      const gender = document.getElementById("gender").value;
-      const bio = document.getElementById("bio").value.trim();
-      const interests = Array.from(document.querySelectorAll('input[name="interest"]:checked')).map(cb => cb.value);
-      const imagePreviewUrl = profileImg.src;
-
-      if (!name || !gender || !bio || interests.length === 0) {
-        alert("⚠️ يرجى تعبئة جميع الحقول.");
-        return;
-      }
-
-      const demoData = {
-        name,
-        gender,
-        bio,
-        interests,
-        imagePreviewUrl
-      };
-
-      localStorage.setItem("demo_profile", JSON.stringify(demoData));
-
-      saveBtn.textContent = "✅ تم الحفظ (وهميًا)";
-      setTimeout(() => {
-        window.location.href = "opportunities.html";
-      }, 1000);
+      // انتقال مباشر بدون أي تحقق
+      window.location.href = "opportunities.html";
     });
   </script>
 </body>
