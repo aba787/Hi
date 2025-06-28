@@ -173,12 +173,12 @@
             createdAt: serverTimestamp()
           });
 
-          window.location.href = "profile.html";
+          window.location.href = "qualifications.html";
         } catch (error) {
           if (error.code === 'auth/email-already-in-use') {
             try {
               const userCred = await signInWithEmailAndPassword(auth, email, password);
-              window.location.href = "qualifications.html";
+              window.location.href = "login.html";
             } catch (loginError) {
               firebaseError.textContent = "الحساب موجود، لكن كلمة المرور غير صحيحة.";
               firebaseError.style.display = "block";
