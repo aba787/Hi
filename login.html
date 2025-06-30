@@ -82,6 +82,21 @@
     .register-link a:hover {
       text-decoration: underline;
     }
+    .forgot-link {
+  display: block;
+  text-align: left;
+  font-size: 14px;
+  color: #1b5e20;
+  margin-top: -15px;
+  margin-bottom: 15px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+.forgot-link:hover {
+  color: #43a047;
+  text-decoration: underline;
+}
   </style>
 </head>
   <body>
@@ -98,7 +113,9 @@
           <input type="password" id="password" placeholder="كلمة المرور" required />
           <span id="togglePassword">👁️</span>
         </div>
-
+<p style="text-align: left; font-size: 14px;">
+  <a href="#" id="forgotPassword" class="forgot-link">هل نسيت كلمة المرور؟</a>
+</p>
         <p class="error-message" id="loginError" style="color: red; display: none;"></p>
 
         <button type="submit" class="btn">دخول</button>
@@ -108,12 +125,17 @@
         </div>
       </form>
     </div>
-
-    <!-- Firebase تسجيل الدخول -->
+<!-- Firebase تسجيل الدخول -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { 
+    getAuth, 
+    signInWithEmailAndPassword, 
+    sendPasswordResetEmail 
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { 
+    getFirestore 
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAlMibtDbLAZLMhhJNho5Sih_qBfWxZyXI",
@@ -128,86 +150,55 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  const form = document.getElementById('registerForm');
-  const nameInput = document.getElementById('name');
+  const form = document.getElementById('login-form');
   const emailInput = document.getElementById('email');
   const passwordInput = document.getElementById('password');
-  const confirmPasswordInput = document.getElementById('confirmPassword');
-  const passwordError = document.getElementById('passwordError');
-  const firebaseError = document.getElementById('firebaseError');
   const togglePassword = document.getElementById('togglePassword');
+  const loginError = document.getElementById('loginError');
+  const forgotPasswordLink = document.getElementById("forgotPassword");
 
   const adminEmail = "admin@email.com"; // ✳️ إيميل الأدمن
 
   togglePassword.addEventListener("click", () => {
     const isPassword = passwordInput.type === "password";
     passwordInput.type = isPassword ? "text" : "password";
-    confirmPasswordInput.type = isPassword ? "text" : "password";
     togglePassword.textContent = isPassword ? "🙈" : "👁️";
   });
 
-  passwordInput.addEventListener("input", () => {
-    passwordError.style.display = passwordInput.value.length < 6 ? "block" : "none";
-  });
-
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    firebaseError.style.display = "none";
+    loginError.style.display = "none";
 
-    const name = nameInput.value.trim();
     const email = emailInput.value.trim();
     const password = passwordInput.value.trim();
-    const confirmPassword = confirmPasswordInput.value.trim();
-
-    if (!name || !email || !password || password.length < 6 || password !== confirmPassword) {
-      firebaseError.textContent = password !== confirmPassword 
-        ? "كلمة المرور وتأكيدها غير متطابقين."
-        : "يرجى تعبئة جميع الحقول بشكل صحيح.";
-      firebaseError.style.display = "block";
-      return;
-    }
 
     try {
-      // تسجيل المستخدم
-      const userCred = await createUserWithEmailAndPassword(auth, email, password);
-
-      // إضافة بياناته في Firestore
-      await setDoc(doc(db, "users", userCred.user.uid), {
-        name,
-        email,
-        createdAt: serverTimestamp()
-      });
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
 
       // تحويل حسب نوع الحساب
       if (email === adminEmail) {
         window.location.href = "admin-chat.html";
       } else {
-        window.location.href = "profile.html";
+        window.location.href = "opportunities.html";
       }
 
     } catch (error) {
-      if (error.code === 'auth/email-already-in-use') {
-        try {
-          // تسجيل دخول لو كان الحساب موجود
-          const userCred = await signInWithEmailAndPassword(auth, email, password);
+      loginError.textContent = "❌ " + error.message;
+      loginError.style.display = "block";
+    }
+  });
 
-          if (email === adminEmail) {
-            window.location.href = "admin-chat.html";
-          } else {
-            window.location.href = "opportunities.html";
-          }
+  // استعادة كلمة المرور
+  forgotPasswordLink.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const email = prompt("📧 أدخل بريدك الإلكتروني لإرسال رابط إعادة تعيين كلمة المرور:");
+    if (!email) return;
 
-        } catch (loginError) {
-          firebaseError.textContent = "الحساب موجود، لكن كلمة المرور غير صحيحة.";
-          firebaseError.style.display = "block";
-        }
-      } else if (error.code === 'auth/invalid-email') {
-        firebaseError.textContent = "البريد الإلكتروني غير صالح.";
-        firebaseError.style.display = "block";
-      } else {
-        firebaseError.textContent = "حدث خطأ: " + error.message;
-        firebaseError.style.display = "block";
-      }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      alert("✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك.");
+    } catch (err) {
+      alert("❌ لم يتم إرسال الرابط: " + err.message);
     }
   });
 </script>
