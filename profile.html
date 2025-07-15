@@ -111,6 +111,25 @@
   </div>
 
   <script>
+      <!-- Firebase Integration -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAlMibtDbLAZLMhhJNho5Sih_qBfWxZyXI",
+      authDomain: "momaken-45ba9.firebaseapp.com",
+      projectId: "momaken-45ba9",
+      storageBucket: "momaken-45ba9.appspot.com",
+      messagingSenderId: "638133555280",
+      appId: "1:638133555280:web:c84bd87c15cabe55d30155"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore();
+
     const profileImg = document.getElementById("profileImg");
     const imageUpload = document.getElementById("imageUpload");
 
@@ -125,37 +144,35 @@
       }
     });
 
-    import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    document.getElementById("profile-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-document.getElementById("profile-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
+      const name = document.getElementById("name").value.trim();
+      const gender = document.getElementById("gender").value;
+      const bio = document.getElementById("bio").value.trim();
+      const interests = Array.from(document.querySelectorAll('input[name="interest"]:checked')).map(i => i.value);
 
-  const name = document.getElementById("name").value.trim();
-  const gender = document.getElementById("gender").value;
-  const bio = document.getElementById("bio").value.trim();
-  const interests = Array.from(document.querySelectorAll('input[name="interest"]:checked')).map(i => i.value);
+      const user = auth.currentUser;
+      if (!user) {
+        alert("يرجى تسجيل الدخول أولاً.");
+        return;
+      }
 
-  const user = auth.currentUser;
-  if (!user) {
-    alert("الرجاء تسجيل الدخول أولاً.");
-    return;
-  }
+      try {
+        await setDoc(doc(db, "users", user.uid), {
+          name,
+          gender,
+          bio,
+          interests,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
 
-  try {
-    await setDoc(doc(db, "users", user.uid), {
-      name,
-      gender,
-      bio,
-      interests,
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-
-    window.location.href = "opportunities.html";
-  } catch (err) {
-    console.error("فشل حفظ البيانات:", err);
-    alert("حدث خطأ أثناء حفظ البيانات.");
-  }
-});
+        window.location.href = "opportunities.html";
+      } catch (err) {
+        console.error("فشل الحفظ:", err);
+        alert("حدث خطأ أثناء حفظ البيانات.");
+      }
+    });
   </script>
 </body>
  
