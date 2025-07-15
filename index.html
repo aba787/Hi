@@ -30,32 +30,33 @@
    </section>
 
    <!-- ✅ Firebase -->
-   <script type="module">
-     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+   <!-- ✅ Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-   const firebaseConfig = {
-  apiKey: "AIzaSyAlMibtDbLAZLMhhJNho5Sih_qBfWxZyXI",
-  authDomain: "momaken-45ba9.firebaseapp.com",
-  projectId: "momaken-45ba9",
-  storageBucket: "momaken-45ba9.appspot.com",
-  messagingSenderId: "638133555280",
-  appId: "1:638133555280:web:c84bd87c15cabe55d30155",
-  measurementId: "G-RW3TJ2S0PL"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyAlMibtDbLAZLMhhJNho5Sih_qBfWxZyXI",
+    authDomain: "momaken-45ba9.firebaseapp.com",
+    projectId: "momaken-45ba9",
+    storageBucket: "momaken-45ba9.appspot.com",
+    messagingSenderId: "638133555280",
+    appId: "1:638133555280:web:c84bd87c15cabe55d30155",
+    measurementId: "G-RW3TJ2S0PL"
+  };
 
-     const app = initializeApp(firebaseConfig);
-     const auth = getAuth(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
 
-     onAuthStateChanged(auth, (user) => {
-       if (user) {
-         const loginLink = document.getElementById("loginLink");
-         if (loginLink) loginLink.style.display = "none";
-       }
-     });
-   </script>
+  onAuthStateChanged(auth, (user) => {
+    const loginLink = document.getElementById("loginLink");
+    if (loginLink) {
+      loginLink.style.display = user ? "none" : "inline-block";
+    }
+  });
+</script>
 
-   <!-- ✅ سكربت إضافي -->
-   <script src="script.js" defer></script>
- </body>
- </html>
+<!-- ✅ سكربت إضافي -->
+<script src="script.js" defer></script>
+</body>
+</html>
