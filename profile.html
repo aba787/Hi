@@ -125,12 +125,37 @@
       }
     });
 
-    document.getElementById("profile-form").addEventListener("submit", (e) => {
-      e.preventDefault();
+    import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-      // انتقال مباشر بدون أي تحقق
-      window.location.href = "opportunities.html";
-    });
+document.getElementById("profile-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById("name").value.trim();
+  const gender = document.getElementById("gender").value;
+  const bio = document.getElementById("bio").value.trim();
+  const interests = Array.from(document.querySelectorAll('input[name="interest"]:checked')).map(i => i.value);
+
+  const user = auth.currentUser;
+  if (!user) {
+    alert("الرجاء تسجيل الدخول أولاً.");
+    return;
+  }
+
+  try {
+    await setDoc(doc(db, "users", user.uid), {
+      name,
+      gender,
+      bio,
+      interests,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    window.location.href = "opportunities.html";
+  } catch (err) {
+    console.error("فشل حفظ البيانات:", err);
+    alert("حدث خطأ أثناء حفظ البيانات.");
+  }
+});
   </script>
 </body>
  
